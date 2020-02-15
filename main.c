@@ -44,10 +44,11 @@ typedef struct erow {
 } erow;
 struct editorConfig {
     int cx, cy;
+    int rowoff; // row offset
     int screenrows; // count of screen rows
     int screencols; // count of screen cols
     int numrows; // count of file rows
-    erow *row;
+    erow *frows; // array of file rows
     struct termios orig_termios;
 };
 
@@ -176,13 +177,13 @@ int getWindowSize(int *rows, int *cols)
 
 void editorAppendRow(char *str, size_t len)
 {
-    E.row = realloc(E.row, sizeof(erow) * (E.numrows + 1));
+    E.frows = realloc(E.frows, sizeof(erow) * (E.numrows + 1));
 
     int at = E.numrows;
-    E.row[at].size = len;
-    E.row[at].chars = malloc(len + 1);
-    memcpy(E.row[at].chars, str, len);
-    E.row[at].chars[len] = '\0';
+    E.frows[at].size = len;
+    E.frows[at].chars = malloc(len + 1);
+    memcpy(E.frows[at].chars, str, len);
+    E.frows[at].chars[len] = '\0';
     E.numrows++;
 }
 
@@ -196,7 +197,7 @@ void editorOpen(char *filename)
     char *line = NULL;
     size_t linecap = 0;
     ssize_t linelen;
-    while ((linelen = getline(&line, &linecap, fp)) != 1) {
+    while ((linelen = getline(&line, &linecap, fp)) != -1) {
         while (linelen > 0 && (line[linelen - 1] == '\n' ||
                                line[linelen - 1] == '\r'))
             linelen--;
@@ -294,7 +295,6 @@ void editorProcessKeypress(void)
 void editorDrawRows(struct abuf *ab)
 {
     int rowi; // index of current row
-    printf(";%d;", E.numrows);
     for (rowi = 0; rowi < E.screenrows; rowi++) {
         if (rowi >= E.numrows) {
             if (E.numrows == 0 && rowi == E.screenrows - 1) {
@@ -316,9 +316,9 @@ void editorDrawRows(struct abuf *ab)
                 abAppend(ab, "~", 1);
             }
         } else {
-            int len = E.row[rowi].size;
+            int len = E.frows[rowi].size;
             if (len > E.screencols) len = E.screencols;
-            abAppend(ab, E.row[rowi].chars, len);
+            abAppend(ab, E.frows[rowi].chars, len);
         }
 
         abAppend(ab, "\x1b[K", 3); // erase text from active cursor position to end of line
@@ -354,7 +354,7 @@ void initEditor(void)
     E.cx = 0;
     E.cy = 0;
     E.numrows = 0;
-    E.row = NULL;
+    E.frows = NULL;
 
     if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
 }
