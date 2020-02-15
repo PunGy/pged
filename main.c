@@ -44,6 +44,7 @@ typedef struct erow {
 } erow;
 struct editorConfig {
     int cx, cy;
+    int coloff; // column offset
     int rowoff; // row offset
     int screenrows; // count of screen rows
     int screencols; // count of screen cols
@@ -242,8 +243,7 @@ void editorMoveCursor(int key)
                 E.cx--;
             break;
         case ARROW_RIGHT:
-            if (E.cx != E.screencols - 1)
-                E.cx++;
+            E.cx++;
             break;
         case ARROW_UP:
             if (E.cy != 0)
@@ -300,13 +300,19 @@ void editorScroll(void)
     if (E.cy >= E.rowoff + E.screenrows) {
         E.rowoff = E.cy - E.screenrows + 1;
     }
+    if (E.cx < E.coloff) {
+        E.coloff = E.cx;
+    }
+    if (E.cx >= E.coloff + E.screencols) {
+        E.coloff = E.cx - E.screencols + 1;
+    }
 }
 void editorDrawRows(struct abuf *ab)
 {
     int rowi; // index of current row
     for (rowi = 0; rowi < E.screenrows; rowi++) {
-        int filerow = rowi + E.rowoff;
-        if (filerow >= E.numrows) {
+        int presrow = rowi + E.rowoff; // process row offsetting
+        if (presrow >= E.numrows) {
             if (E.numrows == 0 && rowi == E.screenrows - 1) {
                 char welcome[80];
 
@@ -326,9 +332,10 @@ void editorDrawRows(struct abuf *ab)
                 abAppend(ab, "~", 1);
             }
         } else {
-            int len = E.frows[filerow].size;
+            int len = E.frows[presrow].size - E.coloff;
+            if (len < 0) len = 0;
             if (len > E.screencols) len = E.screencols;
-            abAppend(ab, E.frows[filerow].chars, len);
+            abAppend(ab, &E.frows[presrow].chars[E.coloff], len);
         }
 
         abAppend(ab, "\x1b[K", 3); // erase text from active cursor position to end of line
@@ -349,7 +356,8 @@ void editorRefreshScreen(void)
 
     char buf[32];
     // move cursor position to cy and cx
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy - E.rowoff + 1, E.cx + 1);
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1, 
+                                              (E.cx - E.coloff) + 1);
     abAppend(&ab, buf, strlen(buf));
 
     abAppend(&ab, "\x1b[?25h", 6); // make the cursor visible
@@ -365,6 +373,7 @@ void initEditor(void)
     E.cx = 0;
     E.cy = 0;
     E.rowoff = 0;
+    E.coloff = 0;
     E.numrows = 0;
     E.frows = NULL;
 
