@@ -250,7 +250,7 @@ void editorMoveCursor(int key)
                 E.cy--;
             break;
         case ARROW_DOWN:
-            if (E.cy != E.screenrows - 1)
+            if (E.cy < E.numrows)
                 E.cy++;
             break;
     }
@@ -292,11 +292,21 @@ void editorProcessKeypress(void)
 
 /** output **/
 
+void editorScroll(void)
+{
+    if (E.cy < E.rowoff) {
+        E.rowoff = E.cy;
+    }
+    if (E.cy >= E.rowoff + E.screenrows) {
+        E.rowoff = E.cy - E.screenrows + 1;
+    }
+}
 void editorDrawRows(struct abuf *ab)
 {
     int rowi; // index of current row
     for (rowi = 0; rowi < E.screenrows; rowi++) {
-        if (rowi >= E.numrows) {
+        int filerow = rowi + E.rowoff;
+        if (filerow >= E.numrows) {
             if (E.numrows == 0 && rowi == E.screenrows - 1) {
                 char welcome[80];
 
@@ -316,9 +326,9 @@ void editorDrawRows(struct abuf *ab)
                 abAppend(ab, "~", 1);
             }
         } else {
-            int len = E.frows[rowi].size;
+            int len = E.frows[filerow].size;
             if (len > E.screencols) len = E.screencols;
-            abAppend(ab, E.frows[rowi].chars, len);
+            abAppend(ab, E.frows[filerow].chars, len);
         }
 
         abAppend(ab, "\x1b[K", 3); // erase text from active cursor position to end of line
@@ -329,6 +339,7 @@ void editorDrawRows(struct abuf *ab)
 }
 void editorRefreshScreen(void)
 {
+    editorScroll();
     struct abuf ab = ABUF_INIT;
 
     abAppend(&ab, "\x1b[?25l", 6); // make the cursor invisible
@@ -338,7 +349,7 @@ void editorRefreshScreen(void)
 
     char buf[32];
     // move cursor position to cy and cx
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy - E.rowoff + 1, E.cx + 1);
     abAppend(&ab, buf, strlen(buf));
 
     abAppend(&ab, "\x1b[?25h", 6); // make the cursor visible
@@ -353,6 +364,7 @@ void initEditor(void)
 {
     E.cx = 0;
     E.cy = 0;
+    E.rowoff = 0;
     E.numrows = 0;
     E.frows = NULL;
 
