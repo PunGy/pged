@@ -323,7 +323,7 @@ void editorRefreshScreen(void)
     editorDrawRows(&ab);
 
     char buf[32];
-    // move cursor position
+    // move cursor position to cy and cx
     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
     abAppend(&ab, buf, strlen(buf));
 
