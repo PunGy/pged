@@ -1,5 +1,9 @@
 /** includes **/
 
+#define _DEFAULT_SOURCE
+#define _GNU_SOURCE
+#define _BSD_SOURCE
+
 #include <ctype.h>
 #include <stdio.h>
 #include <errno.h>
@@ -40,9 +44,9 @@ typedef struct erow {
 } erow;
 struct editorConfig {
     int cx, cy;
-    int screenrows;
-    int screencols;
-    int numrows;
+    int screenrows; // count of screen rows
+    int screencols; // count of screen cols
+    int numrows; // count of file rows
     erow row;
     struct termios orig_termios;
 };
@@ -280,10 +284,10 @@ void editorProcessKeypress(void)
 
 void editorDrawRows(struct abuf *ab)
 {
-    int y;
-    for (y = 0; y < E.screenrows; y++) {
-        if (y >= E.numrows) {
-            if (y == E.screenrows - 1) {
+    int rowi; // index of current row
+    for (rowi = 0; rowi < E.screenrows; rowi++) {
+        if (rowi >= E.numrows) {
+            if (E.numrows == 0 && rowi == E.screenrows - 1) {
                 char welcome[80];
 
                 int welcomelen = snprintf(welcome, sizeof(welcome),
@@ -308,7 +312,7 @@ void editorDrawRows(struct abuf *ab)
         }
 
         abAppend(ab, "\x1b[K", 3); // erase text from active cursor position to end of line
-        if (y < E.screenrows - 1) {
+        if (rowi < E.screenrows - 1) {
             abAppend(ab, "\r\n", 2);
         }
     }
