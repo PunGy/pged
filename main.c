@@ -87,14 +87,14 @@ void enableRawMode(void)
 }
 int editorReadKey(void)
 {
-    int nread;
+    int nread; // number of bytes read
     char c;
     while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
         if (nread == -1 && errno != EAGAIN) die("read");
     }
 
     if (c == '\x1b') {
-        char seq[3];
+        char seq[3]; // array for sequance keys
 
         if (read(STDIN_FILENO, &seq[0], 1) != 1) return '\x1b';
         if (read(STDIN_FILENO, &seq[1], 1) != 1) return '\x1b';
@@ -140,22 +140,22 @@ int editorReadKey(void)
 }
 int getCursorPosition(int *rows, int *cols)
 {
-    char buf[32];
+    char curpos[32]; // string for cursor position
 
     unsigned int i = 0;
 
     // ask shell cursor position, it will be printed to stdout
     if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) return -1;
 
-    while (i < sizeof(buf) - 1) {
-        if (read(STDIN_FILENO, &buf[i], 1) != 1) break;
-        if (buf[i] == 'R') break;
+    while (i < sizeof(curpos) - 1) {
+        if (read(STDIN_FILENO, &curpos[i], 1) != 1) break;
+        if (curpos[i] == 'R') break;
         i++;
     }
-    buf[i] = '\0';
+    curpos[i] = '\0';
 
-    if (buf[0] != '\x1b' || buf[1] != '[') return -1;
-    if (sscanf(&buf[2], "%d;%d", rows, cols) != 2) return -1;
+    if (curpos[0] != '\x1b' || curpos[1] != '[') return -1;
+    if (sscanf(&curpos[2], "%d;%d", rows, cols) != 2) return -1;
 
     return 0;
 }
