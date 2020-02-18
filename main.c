@@ -54,6 +54,7 @@ struct editorConfig {
     int screencols; // count of screen cols
     int numrows; // count of file rows
     erow *frows; // array of file rows
+    char *filename;
     struct termios orig_termios;
 };
 
@@ -235,6 +236,9 @@ void editorAppendRow(char *str, size_t len)
 
 void editorOpen(char *filename)
 {
+    free(E.filename);
+    E.filename = strdup(filename);
+
     FILE *fp = fopen(filename, "r");
     if (!fp) die("fopen");
 
@@ -407,10 +411,18 @@ void editorDrawRows(struct abuf *ab)
         }
 
         abAppend(ab, "\x1b[K", 3); // erase text from active cursor position to end of line
-        if (rowi < E.screenrows - 1) {
-            abAppend(ab, "\r\n", 2);
-        }
+        abAppend(ab, "\r\n", 2);
     }
+}
+void editorDrawStatusBar(struct abuf *ab)
+{
+    abAppend(ab, "\x1b[7m", 4); // reverse color( from black to white, for example )
+    int len = 0;
+    while (len < E.screencols) {
+        abAppend(ab, " ", 1); // fill last row with spaces
+        len++;
+    }
+    abAppend(ab, "\x1b[m", 3); // off color changes
 }
 void editorRefreshScreen(void)
 {
@@ -421,6 +433,7 @@ void editorRefreshScreen(void)
     abAppend(&ab, C_START_CURSOR_POS, 3);
 
     editorDrawRows(&ab);
+    editorDrawStatusBar(&ab);
 
     char buf[32];
     // move cursor position to cy and cx
@@ -445,8 +458,10 @@ void initEditor(void)
     E.coloff = 0;
     E.numrows = 0;
     E.frows = NULL;
+    E.filename = NULL;
 
     if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
+    E.screenrows -= 1;
 }
 
 int main(int argc, char *argv[])
