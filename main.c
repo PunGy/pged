@@ -47,6 +47,7 @@ typedef struct erow {
 } erow;
 struct editorConfig {
     int cx, cy;
+    int rx;
     int coloff; // column offset
     int rowoff; // row offset
     int screenrows; // count of screen rows
@@ -178,6 +179,17 @@ int getWindowSize(int *rows, int *cols)
 }
 
 /** row operations **/
+
+int edtiorRowCxToRx(erow *row, int cx)
+{
+    int rx = 0;
+    for (int i = 0; i < cx; i++) {
+        if (row->chars[i] == '\t')
+            rx += (TAB_SIZE - 1) - (rx % TAB_SIZE);
+        rx++;
+    }
+    return rx;
+} 
 
 // function for updating row via rendering special symbols
 void editorUpdateRow(erow *row)
@@ -342,17 +354,21 @@ void editorProcessKeypress(void)
 
 void editorScroll(void)
 {
+    E.rx = E.cx;
+    if (E.cy < E.numrows)
+        E.rx = edtiorRowCxToRx(&E.frows[E.cy], E.cx);
+
     if (E.cy < E.rowoff) {
         E.rowoff = E.cy;
     }
     if (E.cy >= E.rowoff + E.screenrows) {
         E.rowoff = E.cy - E.screenrows + 1;
     }
-    if (E.cx < E.coloff) {
-        E.coloff = E.cx;
+    if (E.rx < E.coloff) {
+        E.coloff = E.rx;
     }
-    if (E.cx >= E.coloff + E.screencols) {
-        E.coloff = E.cx - E.screencols + 1;
+    if (E.rx >= E.coloff + E.screencols) {
+        E.coloff = E.rx - E.screencols + 1;
     }
 }
 void editorDrawRows(struct abuf *ab)
@@ -405,7 +421,7 @@ void editorRefreshScreen(void)
     char buf[32];
     // move cursor position to cy and cx
     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1, 
-                                              (E.cx - E.coloff) + 1);
+                                              (E.rx - E.coloff) + 1);
     abAppend(&ab, buf, strlen(buf));
 
     abAppend(&ab, "\x1b[?25h", 6); // make the cursor visible
@@ -420,6 +436,7 @@ void initEditor(void)
 {
     E.cx = 0;
     E.cy = 0;
+    E.rx = 0;
     E.rowoff = 0;
     E.coloff = 0;
     E.numrows = 0;
