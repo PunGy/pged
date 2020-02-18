@@ -6,12 +6,14 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <string.h>
 #include <termios.h>
+#include <time.h>
 #include <unistd.h>
 
 /** defines **/
@@ -55,6 +57,8 @@ struct editorConfig {
     int numrows; // count of file rows
     erow *frows; // array of file rows
     char *filename;
+    char statusmsg[80];
+    time_t statusmsg_time;
     struct termios orig_termios;
 };
 
@@ -439,6 +443,16 @@ void editorDrawStatusBar(struct abuf *ab)
     }
     
     abAppend(ab, "\x1b[m", 3); // off color changes
+    abAppend(ab, "\r\n", 2);
+}
+void editorDrawMessageBar(struct abuf *ab)
+{
+    abAppend(ab, "\x1b[K", 3);
+    int msglen = strlen(E.statusmsg);
+
+    if (msglen > E.screencols) msglen = E.screencols;
+    if (msglen && time(NULL) - E.statusmsg_time < 5)
+        abAppend(ab, E.statusmsg, msglen);
 }
 void editorRefreshScreen(void)
 {
@@ -450,6 +464,7 @@ void editorRefreshScreen(void)
 
     editorDrawRows(&ab);
     editorDrawStatusBar(&ab);
+    editorDrawMessageBar(&ab);
 
     char buf[32];
     // move cursor position to cy and cx
@@ -461,6 +476,14 @@ void editorRefreshScreen(void)
 
     write(STDOUT_FILENO, ab.b, ab.len);
     abFree(&ab);
+}
+void editorSetStatusMessage(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(E.statusmsg, sizeof(E.statusmsg), fmt, ap);
+    va_end(ap);
+    E.statusmsg_time = time(NULL);
 }
 
 /** init **/
@@ -475,9 +498,11 @@ void initEditor(void)
     E.numrows = 0;
     E.frows = NULL;
     E.filename = NULL;
+    E.statusmsg[0] = '\0';
+    E.statusmsg_time = 0;
 
     if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
-    E.screenrows -= 1;
+    E.screenrows -= 2;
 }
 
 int main(int argc, char *argv[])
@@ -487,6 +512,8 @@ int main(int argc, char *argv[])
     if (argc >= 2) {
         editorOpen(argv[1]);
     }
+
+    editorSetStatusMessage("HELP: Ctrl-Q = quit");
 
     while (1) {
         editorRefreshScreen();
