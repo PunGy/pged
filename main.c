@@ -341,7 +341,8 @@ void editorProcessKeypress(void)
             E.cx = 0;
             break;
         case END_KEY:
-            E.cx = E.screencols - 1;
+            if (E.cy < E.numrows)
+                E.cx = E.frows[E.cy].size;
             break;
 
         case ARROW_UP:
