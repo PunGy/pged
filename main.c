@@ -212,7 +212,7 @@ void editorUpdateRow(erow *row)
         }        
     }
     row->render[renderIdx] = '\0';
-    row->rsize = rowIdx;
+    row->rsize = renderIdx;
 }
 void editorAppendRow(char *str, size_t len)
 {
