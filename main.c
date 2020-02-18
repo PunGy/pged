@@ -17,6 +17,7 @@
 /** defines **/
 
 #define LTED_VERSION "0.0.1"
+#define TAB_SIZE 4
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 // 4 byte size
@@ -178,18 +179,28 @@ int getWindowSize(int *rows, int *cols)
 
 /** row operations **/
 
+// function for updating row via rendering special symbols
 void editorUpdateRow(erow *row)
 {
+    int tabs = 0;
+    int rowIdx; // current position of row
+    int renderIdx = 0; // current position of render string
+    for (rowIdx = 0; rowIdx < row->size; rowIdx++)
+        if (row->chars[rowIdx] == '\t') tabs++;
+    
     free(row->render);
-    row->render = malloc(row->size + 1);
+    row->render = malloc(row->size + tabs * (TAB_SIZE - 1) + 1);
 
-    int j;
-    int idx = 0;
-    for (j = 0; j < row->size; j++) {
-        row->render[idx++] = row->chars[j];
+    for (rowIdx = 0; rowIdx < row->size; rowIdx++) {
+        if (row->chars[rowIdx] == '\t') {
+            row->render[renderIdx++] = ' '; // add first space, because if we will start from zero, 0 % 0 != 0 will be false
+            while (renderIdx % TAB_SIZE != 0) row->render[renderIdx++] = ' ';
+        } else {
+            row->render[renderIdx++] = row->chars[rowIdx];
+        }        
     }
-    row->render[idx] = '\0';
-    row->rsize = idx;
+    row->render[renderIdx] = '\0';
+    row->rsize = rowIdx;
 }
 void editorAppendRow(char *str, size_t len)
 {
@@ -348,7 +359,7 @@ void editorDrawRows(struct abuf *ab)
 {
     int rowi; // index of current row
     for (rowi = 0; rowi < E.screenrows; rowi++) {
-        int presrow = rowi + E.rowoff; // process row offsetting
+        int presrow = rowi + E.rowoff; // offsetted row
         if (presrow >= E.numrows) {
             if (E.numrows == 0 && rowi == E.screenrows - 1) {
                 char welcome[80];
@@ -369,10 +380,10 @@ void editorDrawRows(struct abuf *ab)
                 abAppend(ab, "~", 1);
             }
         } else {
-            int len = E.frows[presrow].size - E.coloff;
+            int len = E.frows[presrow].rsize - E.coloff;
             if (len < 0) len = 0;
             if (len > E.screencols) len = E.screencols;
-            abAppend(ab, &E.frows[presrow].chars[E.coloff], len);
+            abAppend(ab, &E.frows[presrow].render[E.coloff], len);
         }
 
         abAppend(ab, "\x1b[K", 3); // erase text from active cursor position to end of line
