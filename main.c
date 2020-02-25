@@ -28,6 +28,7 @@
 #define C_START_CURSOR_POS "\x1b[H"
 
 enum editorKey {
+    BACKSPACE = 127,
     ARROW_LEFT = 1000,
     ARROW_RIGHT,
     ARROW_UP,
@@ -349,6 +350,10 @@ void editorProcessKeypress(void)
     int c = editorReadKey();
 
     switch (c) {
+        case '\r':
+            /* TODO */
+            break;
+
         case CTRL_KEY('q'):
             write(STDOUT_FILENO, C_ERASE_DISPLAY, 4);
             write(STDOUT_FILENO, C_START_CURSOR_POS, 3);
@@ -373,12 +378,27 @@ void editorProcessKeypress(void)
             if (E.cy < E.numrows)
                 E.cx = E.rows[E.cy].size;
             break;
+        
+        case BACKSPACE:
+        case CTRL_KEY('h'):
+        case DEL_KEY:
+            /* TODO */
+            break;
 
         case ARROW_UP:
         case ARROW_DOWN:
         case ARROW_LEFT:
         case ARROW_RIGHT:
             editorMoveCursor(c);
+            break;
+
+        case CTRL_KEY('l'):
+        case '\x1b':
+            /* TODO */
+            break;
+        
+        default:
+            editorInsertChar(c);
             break;
     }
 }
@@ -448,8 +468,8 @@ void editorDrawStatusBar(struct abuf *ab)
     int leftLen = snprintf(leftStatus, sizeof(leftStatus), "%.20s - %d lines",
         E.filename ? E.filename : "[No Name]", E.numrows);
 
-    int rightLen = snprintf(rightStatus, sizeof(rightStatus), "%d/%d",
-        E.cy + 1, E.numrows);
+    int rightLen = snprintf(rightStatus, sizeof(rightStatus), "Ln %d, Col%d",
+        E.cy + 1, E.cx + 1);
 
     if (leftLen > E.screencols) leftLen = E.screencols;
     abAppend(ab, leftStatus, leftLen);
