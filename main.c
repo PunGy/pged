@@ -260,6 +260,25 @@ void editorInsertChar(int c)
 
 /** file i/o **/
 
+char *editorRowsToString(int *buflen)
+{
+    int totlen = 0;
+    int i;
+    for (i = 0; i < E.numrows; i++)
+        totlen += E.rows[i].size + 1;
+    *buflen = totlen;
+
+    char *buf = malloc(totlen);
+    char *p = buf;
+    for (i = 0; i < E.numrows; i++) {
+        memcpy(p, E.rows[i].chars, E.rows[i].size);
+        p += E.rows[i].size;
+        *p = '\n';
+        p++;
+    }
+
+    return buf;
+}
 void editorOpen(char *filename)
 {
     free(E.filename);
