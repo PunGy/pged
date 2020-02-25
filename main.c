@@ -55,7 +55,7 @@ struct editorConfig {
     int screenrows; // count of screen rows
     int screencols; // count of screen cols
     int numrows; // count of file rows
-    erow *frows; // array of file rows
+    erow *rows; // array of file rows
     char *filename;
     char statusmsg[80];
     time_t statusmsg_time;
@@ -195,7 +195,6 @@ int edtiorRowCxToRx(erow *row, int cx)
     }
     return rx;
 } 
-
 // function for updating row via rendering special symbols
 void editorUpdateRow(erow *row)
 {
@@ -221,19 +220,41 @@ void editorUpdateRow(erow *row)
 }
 void editorAppendRow(char *str, size_t len)
 {
-    E.frows = realloc(E.frows, sizeof(erow) * (E.numrows + 1));
+    E.rows = realloc(E.rows, sizeof(erow) * (E.numrows + 1));
 
     int at = E.numrows;
-    E.frows[at].size = len;
-    E.frows[at].chars = malloc(len + 1);
-    memcpy(E.frows[at].chars, str, len);
-    E.frows[at].chars[len] = '\0';
+    E.rows[at].size = len;
+    E.rows[at].chars = malloc(len + 1);
+    memcpy(E.rows[at].chars, str, len);
+    E.rows[at].chars[len] = '\0';
 
-    E.frows[at].rsize = 0;
-    E.frows[at].render = NULL;
-    editorUpdateRow(&E.frows[at]);
+    E.rows[at].rsize = 0;
+    E.rows[at].render = NULL;
+    editorUpdateRow(&E.rows[at]);
 
     E.numrows++;
+}
+void editorRowInsertChar(erow *row, int at, int c)
+{
+    if (at < 0 || at > row->size) at = row->size;
+
+    row->chars = realloc(row->chars, row->size + 2);
+    memmove(&row->chars[at + 1], &row->chars[at], row->size - at + 1);
+    row->size++;
+    row->chars[at] = c;
+
+    editorUpdateRow(row);
+}
+
+/** editor operation **/
+
+void editorInsertChar(int c)
+{
+    if (E.cy == E.numrows) {
+        editorAppendRow("", 0);
+    }
+    editorRowInsertChar(&E.rows[E.cy], E.cx, c);
+    E.cx++;
 }
 
 /** file i/o **/
@@ -287,7 +308,7 @@ void abFree(struct abuf *ab)
 
 void editorMoveCursor(int key)
 {
-    erow *row = (E.cy >= E.numrows) ? NULL : &E.frows[E.cy];
+    erow *row = (E.cy >= E.numrows) ? NULL : &E.rows[E.cy];
 
     switch (key)
     {
@@ -296,7 +317,7 @@ void editorMoveCursor(int key)
                 E.cx--;
             } else if (E.cy > 0) {
                 E.cy--;
-                E.cx = E.frows[E.cy].size;
+                E.cx = E.rows[E.cy].size;
             }
             break;
         case ARROW_RIGHT:
@@ -317,7 +338,7 @@ void editorMoveCursor(int key)
             break;
     }
 
-    row = (E.cy >= E.numrows) ? NULL : &E.frows[E.cy];
+    row = (E.cy >= E.numrows) ? NULL : &E.rows[E.cy];
     int rowlen = row ? row->size : 0;
     if (E.cx > rowlen) {
         E.cx = rowlen;
@@ -350,7 +371,7 @@ void editorProcessKeypress(void)
             break;
         case END_KEY:
             if (E.cy < E.numrows)
-                E.cx = E.frows[E.cy].size;
+                E.cx = E.rows[E.cy].size;
             break;
 
         case ARROW_UP:
@@ -368,7 +389,7 @@ void editorScroll(void)
 {
     E.rx = E.cx;
     if (E.cy < E.numrows)
-        E.rx = edtiorRowCxToRx(&E.frows[E.cy], E.cx);
+        E.rx = edtiorRowCxToRx(&E.rows[E.cy], E.cx);
 
     if (E.cy < E.rowoff) {
         E.rowoff = E.cy;
@@ -408,10 +429,10 @@ void editorDrawRows(struct abuf *ab)
                 abAppend(ab, "~", 1);
             }
         } else {
-            int len = E.frows[presrow].rsize - E.coloff;
+            int len = E.rows[presrow].rsize - E.coloff;
             if (len < 0) len = 0;
             if (len > E.screencols) len = E.screencols;
-            abAppend(ab, &E.frows[presrow].render[E.coloff], len);
+            abAppend(ab, &E.rows[presrow].render[E.coloff], len);
         }
 
         abAppend(ab, "\x1b[K", 3); // erase text from active cursor position to end of line
@@ -496,7 +517,7 @@ void initEditor(void)
     E.rowoff = 0;
     E.coloff = 0;
     E.numrows = 0;
-    E.frows = NULL;
+    E.rows = NULL;
     E.filename = NULL;
     E.statusmsg[0] = '\0';
     E.statusmsg_time = 0;
