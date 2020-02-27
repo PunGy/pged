@@ -19,7 +19,7 @@
 
 /** defines **/
 
-#define LTED_VERSION "0.0.1"
+#define PUGED_VERSION "0.0.1"
 #define TAB_SIZE 4
 #define CTRL_KEY(k) ((k) & 0x1f)
 
@@ -488,7 +488,7 @@ void editorDrawRows(struct abuf *ab)
                 char welcome[80];
 
                 int welcomelen = snprintf(welcome, sizeof(welcome),
-                    "LTED -- version %s", LTED_VERSION);
+                    "PUGED -- version %s", PUGED_VERSION);
                 if (welcomelen > E.screencols) welcomelen = E.screencols;
 
                 int padding = (E.screencols - welcomelen) / 2;
