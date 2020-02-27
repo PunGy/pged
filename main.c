@@ -20,6 +20,7 @@
 /** defines **/
 
 #define PUGED_VERSION "0.0.1"
+#define QUIT_TIMES 1
 #define TAB_SIZE 4
 #define CTRL_KEY(k) ((k) & 0x1f)
 
@@ -254,6 +255,15 @@ void editorRowInsertChar(erow *row, int at, int c)
     editorUpdateRow(row);
     E.dirty++;
 }
+void editorRowDelChar(erow *row, int at)
+{
+    if (at < 0 || at >= row->size) return;
+
+    memmove(&row->chars[at], &row->chars[at + 1], row->size - 1);
+    row->size--;
+    editorUpdateRow(row);
+    E.dirty++;
+}
 
 /** editor operation **/
 
@@ -264,6 +274,16 @@ void editorInsertChar(int c)
     }
     editorRowInsertChar(&E.rows[E.cy], E.cx, c);
     E.cx++;
+}
+void editorDelChar()
+{
+    if (E.cy == E.numrows) return;
+
+    erow *row = &E.rows[E.cy];
+    if (E.cx > 0) {
+        editorRowDelChar(row, E.cx -1);
+        E.cx--;
+    }
 }
 
 /** file i/o **/
@@ -398,6 +418,8 @@ void editorMoveCursor(int key)
 }
 void editorProcessKeypress(void)
 {
+    static int quit_times = QUIT_TIMES;
+
     int c = editorReadKey();
 
     switch (c) {
@@ -406,6 +428,14 @@ void editorProcessKeypress(void)
             break;
 
         case CTRL_KEY('q'):
+            if (E.dirty && quit_times > 0) {
+                editorSetStatusMessage(
+                    "File has unsaved changes. "
+                    "Press Ctrl-Q %d more times to quit.", quit_times
+                );
+                quit_times--;
+                return;
+            }
             write(STDOUT_FILENO, C_ERASE_DISPLAY, 4);
             write(STDOUT_FILENO, C_START_CURSOR_POS, 3);
             exit(0);
@@ -436,7 +466,8 @@ void editorProcessKeypress(void)
         case BACKSPACE:
         case CTRL_KEY('h'):
         case DEL_KEY:
-            /* TODO */
+            if (c == DEL_KEY) editorMoveCursor(ARROW_RIGHT);
+            editorDelChar();
             break;
 
         case ARROW_UP:
@@ -455,6 +486,8 @@ void editorProcessKeypress(void)
             editorInsertChar(c);
             break;
     }
+
+    quit_times = QUIT_TIMES;
 }
 
 /** output **/
