@@ -1,22 +1,24 @@
-CCFLAGS  := -Wall -Wextra -pedantic -std=c99
+CCFLAGS   := -Wall -Wextra -pedantic -std=c99
 
-MAINS    := ./source/*.c
-OBJS	 := ./objects/*.o
+SOURCES   := ./source/*.c
+OBJS	  := ./objects/*.o
 
-pged: $(OBJS)
-	$(CC) $(OBJS) -o pged $(CCFLAGS)
+EXEC := pged
 
-test: $(OBJS) pged testFile.txt
-	$(CC) $(OBJS) -o pged $(CCFLAGS) && ./pged testFile.txt
+$(EXEC): $(OBJS)
+	$(CC) $(OBJS) -o $(EXEC) $(CCFLAGS)
+
+test: $(OBJS) $(exec) testFile.txt
+	$(CC) $(OBJS) -o $(EXEC) $(CCFLAGS) && ./$(EXEC) testFile.txt
 
 clean:
-	rm -f pged $(OBJS)
+	rm -f $(EXEC) $(OBJS)
 
 install:
-	cp pged /usr/local/bin/pged
+	cp $(EXEC) /usr/local/bin/$(EXEC)
 uninstall:
-	rm -f pged /usr/local/bin/pged
+	rm -f $(EXEC) /usr/local/bin/$(EXEC)
 
-$(OBJS): $(MAINS)
-	$(CC) $(CCFLAGS) -c $(MAINS)
+$(OBJS): $(SOURCES)
+	$(CC) $(CCFLAGS) -c $(SOURCES)
 	mv *.o ./objects
