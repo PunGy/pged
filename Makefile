@@ -1,18 +1,22 @@
 CCFLAGS  := -Wall -Wextra -pedantic -std=c99
 
-MAINS    := main.c
-TARGETS  := pged
+MAINS    := ./source/*.c
+OBJS	 := ./objects/*.o
 
-$(TARGETS): $(MAINS)
-	$(CC) $(MAINS) -o $(TARGETS) $(CCFLAGS)
+pged: $(OBJS)
+	$(CC) $(OBJS) -o pged $(CCFLAGS)
 
-test: $(MAINS) $(TARGETS) testFile.txt
-	$(CC) $(MAINS) -o $(TARGETS) $(CCFLAGS) && ./$(TARGETS) testFile.txt
+test: $(OBJS) pged testFile.txt
+	$(CC) $(OBJS) -o pged $(CCFLAGS) && ./pged testFile.txt
 
 clean:
-	rm -f $(TARGETS)
+	rm -f pged $(OBJS)
 
-install: $(TARGETS)
-	cp $(TARGETS) /usr/local/bin/$(TARGETS)
+install:
+	cp pged /usr/local/bin/pged
 uninstall:
-	rm -f $(TARGETS) /usr/local/bin/$(TARGETS)
+	rm -f pged /usr/local/bin/pged
+
+$(OBJS): $(MAINS)
+	$(CC) $(CCFLAGS) -c $(MAINS)
+	mv *.o ./objects
