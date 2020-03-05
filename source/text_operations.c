@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "user_io.h"
 #include "pged.h"
 
 
@@ -57,10 +58,12 @@ void editorUpdateRow(erow *row)
         if (row->chars[rowIdx] == '\t') tabs++;
     
     free(row->render);
-    row->render = malloc(row->size + tabs * (TAB_SIZE - 1) + 1);
+    row->render = (char *)malloc(row->size + tabs * (TAB_SIZE - 1) + 1);
     if (tabs == 0) {
-        strcpy(row->render, row->chars);
+        memcpy(row->render, row->chars, row->size);
         row->rsize = row->size;
+        row->render[row->rsize] = '\0';
+        return;
     }
 
     for (rowIdx = 0; rowIdx < row->size; rowIdx++) {
@@ -183,7 +186,7 @@ void editorRowDelChar(erow *row, int at)
     memmove(
         &row->chars[at],
         &row->chars[at + 1],
-        row->size - 1
+        row->size - at
     );
     row->size--;
     editorUpdateRow(row);
@@ -238,7 +241,7 @@ void editorDelChar()
 
     erow *row = &E.rows[E.cy];
     if (E.cx > 0) {
-        editorRowDelChar(row, E.cx -1);
+        editorRowDelChar(row, E.cx - 1);
         E.cx--;
     } else {
         E.cx = E.rows[E.cy - 1].size;

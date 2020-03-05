@@ -6,7 +6,7 @@
         {
             "label": "build editor",
             "type": "shell",
-            "command": "gcc main.c -g3 -o pged",
+            "command": "gcc ${workspaceFolder}/source/*.c -g3 -o pged",
             "group": {
                 "kind": "build",
                 "isDefault": true
