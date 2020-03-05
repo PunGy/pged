@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "termios.h": "c",
+        "editor_core.h": "c",
+        "pged.h": "c",
+        "cstdlib": "c",
+        "unistd.h": "c",
+        "text_operations.h": "c",
+        "stdio.h": "c",
+        "string.h": "c",
+        "types.h": "c",
+        "fcntl.h": "c",
+        "cctype": "c"
+    }
+}
