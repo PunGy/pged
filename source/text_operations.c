@@ -44,7 +44,25 @@ int editorRowCxToRx(erow *row, int cx)
         rx++;
     }
     return rx;
-} 
+}
+/**
+ * Return row x axis from render x axis
+ */
+int editorRowRxToCx(erow *row, int rx)
+{
+    int cur_rx = 0;
+    int cx;
+
+    for (cx = 0; cx < row->size; cx++) {
+        if (row->chars[cx] == '\t')
+            cur_rx += (TAB_SIZE - 1) - (cur_rx % TAB_SIZE);
+        cur_rx++;
+
+        if (cur_rx > rx) return cx;
+    }
+
+    return cx;
+}
 
 /**
  * Process row for genering render row to E.render
