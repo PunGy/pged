@@ -1,4 +1,5 @@
-CCFLAGS   := -Wall -Wextra -pedantic -std=c99
+CC		  := clang
+CCFLAGS   := -Wall -Werror -Wextra -pedantic -std=c11
 
 SOURCES   := ./source/*.c
 OBJS	  := ./objects/*.o

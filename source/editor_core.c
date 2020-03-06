@@ -17,6 +17,7 @@ void die(const char *error)
     write(STDOUT_FILENO, C_ERASE_DISPLAY, 4);
     write(STDOUT_FILENO, C_START_CURSOR_POS, 3);
     perror(error);
+
     exit(1);
 }
 
