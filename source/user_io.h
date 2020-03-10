@@ -19,8 +19,16 @@ void obAppend(struct obuf *ob, const char *str, int len);
 // Clear output buffer
 void obFree(struct obuf *ob);
 
-// Ask user and return his answer
-char *editorPrompt(char *prompt);
+/**
+ * Ask user and return his answer
+ * @param prompt   - asking string
+ * @param callback - callback, process on every user keypress. Provide NULL, if callback isn't require
+ * 
+ * Callback signature
+ * @param buf - user's input string
+ * @param c   - last provided character
+ */
+char *editorPrompt(char *prompt, void (*callback)(char *buf, int c));
 
 // Process moving cursor and change E.cx/E.cy depend on input key
 void editorMoveCursor(int key);

@@ -6,11 +6,11 @@
 #include "user_io.h"
 #include "text_operations.h"
 
-void editorFind(void)
+void editorFindCallback(char *query, int key)
 {
-  char *query = editorPrompt("Search: %s (ESC to cancel)");
-  
-  if (query == NULL) return;
+  if (key == '\r' || key == '\x1b') {
+    return;
+  }
   
   for (int i = 0; i < E.numrows; i++) {
     erow *row = &E.rows[i];
@@ -22,7 +22,14 @@ void editorFind(void)
       E.rowoff = E.numrows;
       break;
     }
-
   }
-  free(query);
+}
+
+void editorFind(void)
+{
+  char *query = editorPrompt("Search: %s (ESC to cancel)", editorFindCallback);
+  
+  if (query) {
+    free(query);
+  }
 }
