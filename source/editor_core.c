@@ -55,7 +55,6 @@ int editorReadKey(void)
     while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
         if (nread == -1 && errno != EAGAIN) die("read: Error in reading key from STDIN");
     }
-    editorSetStatusMessage("%d, printed", c);
 
     if (c == '\x1b') {
         char seq[3]; // array for sequance keys
