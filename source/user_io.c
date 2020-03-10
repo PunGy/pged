@@ -14,6 +14,7 @@
 #include "user_io.h"
 #include "text_operations.h"
 #include "file.h"
+#include "search.h"
 
 /* OB data */
 
@@ -139,6 +140,10 @@ void editorProcessKeypress(void)
             break;
         case CTRL_KEY('s'):
             editorSave();
+            break;
+        
+        case CTRL_KEY('f'):
+            editorFind();
             break;
 
         case PAGE_UP:

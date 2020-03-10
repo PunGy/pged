@@ -9,6 +9,9 @@ char *editorRowsToString(int *buflen);
 // Return render x from plain row and row x
 int editorRowCxToRx(erow *row, int cx);
 
+// Return row x axis from render x axis 
+int editorRowRxToCx(erow *row, int rx);
+
 // Process row for genering render row to E.render
 void editorUpdateRow(erow *row);
 

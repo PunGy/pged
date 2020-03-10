@@ -4,8 +4,10 @@
 
 #include "pged.h"
 #include "user_io.h"
+#include "text_operations.h"
 
-void editorFind() {
+void editorFind(void)
+{
   char *query = editorPrompt("Search: %s (ESC to cancel)");
   
   if (query == NULL) return;
@@ -16,7 +18,7 @@ void editorFind() {
 
     if (match) {
       E.cy = i;
-      E.cx = match - row->render;
+      E.cx = editorRowRxToCx(row, match - row->render);
       E.rowoff = E.numrows;
       break;
     }
