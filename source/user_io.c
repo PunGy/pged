@@ -48,14 +48,14 @@ char *editorPrompt(char *prompt, void (*callback)(char *, int))
 
     while (1) {
         editorSetStatusMessage(prompt, buf);
+        int c = editorReadKey();
         editorRefreshScreen();
 
-        int c = editorReadKey();
         if (c == DEL_KEY || c == CTRL_KEY('h') || c == BACKSPACE) {
 
             if (buflen != 0) buf[--buflen] = '\0';
 
-        } else if (c == '\x1b') {
+        } else if (c == 'q') {
 
             editorSetStatusMessage("");
             if (callback) callback(buf, c);

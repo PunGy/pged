@@ -10,14 +10,15 @@
 
 #include "editor_core.h"
 #include "pged.h"
+#include "user_io.h"
 
 
 void die(const char *error)
 {
     write(STDOUT_FILENO, C_ERASE_DISPLAY, 4);
     write(STDOUT_FILENO, C_START_CURSOR_POS, 3);
+    
     perror(error);
-
     exit(1);
 }
 
@@ -38,8 +39,10 @@ void enableRawMode(void)
 
     raw.c_iflag &= ~(BRKINT | INPCK | ISTRIP | ICRNL | IXON);
     raw.c_oflag &= ~(OPOST);
-    raw.c_cflag &= ~(CS8);
+    raw.c_cflag |= ~(CS8);
     raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+    raw.c_cc[VMIN] = 0;
+    raw.c_cc[VTIME] = 1;
 
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) die("tcsetattr: Error with writing setting for raw mode");
 }
@@ -52,6 +55,7 @@ int editorReadKey(void)
     while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
         if (nread == -1 && errno != EAGAIN) die("read: Error in reading key from STDIN");
     }
+    editorSetStatusMessage("%d, printed", c);
 
     if (c == '\x1b') {
         char seq[3]; // array for sequance keys
