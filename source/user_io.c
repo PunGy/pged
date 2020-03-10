@@ -262,7 +262,19 @@ void editorDrawRows(struct obuf *ob)
             int len = E.rows[presrow].rsize - E.coloff;
             if (len < 0) len = 0;
             if (len > E.screencols) len = E.screencols;
-            obAppend(ob, &E.rows[presrow].render[E.coloff], len);
+            
+            char *c = &E.rows[presrow].render[E.coloff];
+
+            obAppend(ob, "\x1b[38;5;255;255;255m", 19);
+            for (int j = 0; j < len; j++) {
+                if (isdigit(c[j])) {
+                    obAppend(ob, "\x1b[38;2;98;178;138m", 18);
+                    obAppend(ob, &c[j], 1);
+                    obAppend(ob, "\x1b[38;5;255;255;255m", 19);
+                } else {
+                    obAppend(ob, &c[j], 1);
+                }
+            }
         }
 
         obAppend(ob, "\x1b[K", 3); // erase text from active cursor position to end of line
