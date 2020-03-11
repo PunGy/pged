@@ -11,6 +11,7 @@
         "types.h": "c",
         "fcntl.h": "c",
         "cctype": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "stdbool.h": "c"
     }
 }

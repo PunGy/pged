@@ -289,11 +289,16 @@ void editorDrawStatusBar(struct obuf *ob)
     
     char leftStatus[80],
          rightStatus[80];
-    int leftLen = snprintf(leftStatus, sizeof(leftStatus), "%.20s - %d lines %s",
-        E.filename ? E.filename : "[No Name]", E.numrows,
-        E.dirty ? "(modified)" : "");
+    int leftLen = snprintf(leftStatus, sizeof(leftStatus),
+        "\"%.20s\" - %d lines %s %s %s",
+        E.filename ? E.filename : "[No Name]", 
+        E.numrows,
+        E.file_exist ? "" : "[New file]",
+        E.dirty ? "(modified)" : "",
+        E.file_write_rights ? "" : "[READ ONLY]"
+    );
 
-    int rightLen = snprintf(rightStatus, sizeof(rightStatus), "Ln %d, Col%d",
+    int rightLen = snprintf(rightStatus, sizeof(rightStatus), "Ln %d, Col %d",
         E.cy + 1, E.cx + 1);
 
     if (leftLen > E.screencols) leftLen = E.screencols;

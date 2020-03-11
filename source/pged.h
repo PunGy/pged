@@ -3,6 +3,7 @@
 
 #include <termios.h>
 #include <time.h>
+#include <stdbool.h>
 
 #define PGED_VERSION "0.0.1"
 #define QUIT_TIMES 1
@@ -24,7 +25,11 @@ struct editorConfig {
     int numrows; // count of file rows
     erow *rows; // array of file rows
     int dirty; // flag
+    
     char *filename;
+    bool file_exist; // is file exist
+    bool file_write_rights;
+
     char statusmsg[80];
     time_t statusmsg_time;
     struct termios orig_termios;

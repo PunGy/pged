@@ -19,6 +19,8 @@ void die(const char *error)
     write(STDOUT_FILENO, C_START_CURSOR_POS, 3);
     
     perror(error);
+    write(STDOUT_FILENO, "\x1b[E", 3);
+
     exit(1);
 }
 

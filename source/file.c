@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "pged.h"
 #include "text_operations.h"
@@ -19,12 +20,9 @@
 /**
  * Open file and write text to E.rows
  */
-void editorOpen(char *filename)
+void editorOpen()
 {
-    free(E.filename);
-    E.filename = strdup(filename);
-
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = fopen(E.filename, "r");
     if (!fp) die("fopen: can't open file");
 
     char *line = NULL;
@@ -65,6 +63,7 @@ void editorSave()
             close(fd);
             E.dirty = 0;
             editorSetStatusMessage("%d bytes written to disk", len);
+            E.file_exist = true;
             return;
         }
         close(fd);
