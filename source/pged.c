@@ -51,8 +51,8 @@ int main(int argc, char *argv[])
             editorOpen();
         } else {
             char *folder = strrchr(E.filename, '/');
-            if (access(folder, W_OK) == -1) E.file_write_rights = false;
             E.file_exist = false;
+            free(folder);
         }
 
     }
