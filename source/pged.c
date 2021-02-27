@@ -15,6 +15,7 @@
 #include "text_operations.h"
 #include "file.h"
 
+struct editorConfig E;
 
 void initEditor(void)
 {

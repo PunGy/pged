@@ -35,6 +35,6 @@ struct editorConfig {
     struct termios orig_termios;
 };
 
-struct editorConfig E;
+extern struct editorConfig E;
 
 #endif
