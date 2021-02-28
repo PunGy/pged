@@ -34,19 +34,32 @@ void disableRawMode(void)
 
 void enableRawMode(void)
 {
-    if (tcgetattr(STDIN_FILENO, &E.orig_termios) == -1) die("tcgetattr: Error with coping default setting");
-    atexit(disableRawMode);
+    if (tcgetattr(STDIN_FILENO, &E.orig_termios) == -1)  // Copy initial terminal state into orig_termios
+        die("tcgetattr: Error with coping default setting");
+    atexit(disableRawMode); // Restore settings on exit
 
     struct termios raw = E.orig_termios;
 
-    raw.c_iflag &= ~(BRKINT | INPCK | ISTRIP | ICRNL | IXON);
-    raw.c_oflag &= ~(OPOST);
-    raw.c_cflag |= ~(CS8);
-    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-    raw.c_cc[VMIN] = 0;
-    raw.c_cc[VTIME] = 1;
+    raw.c_iflag &= ~( // Disable
+        BRKINT        // break condition
+        | INPCK       // parity checking
+        | ISTRIP      // striping 8th bit
+        | ICRNL       // carriage, allow Enter and CTRL-M to be read
+        | IXON        // software flow control (prevent defaults for: CTRL-S, CTRL-Q)
+    );
+    raw.c_oflag &= ~(OPOST); // Disable post processing of output (\n, \r\n)
+    raw.c_cflag |= ~(CS8); // Set character size to 8 bits
+    raw.c_lflag &= ~( // Disable
+        ECHO          // user input on type
+        | ICANON      // cannonical mode (disable reading line-by-line)
+        | IEXTEN      // prevent defaults for: CTRL-V, CTRL-O
+        | ISIG        // interrupt signals (prevent defaults for: CTRL-C, CTRL-Z, CTRL-Y)
+    );
+    raw.c_cc[VMIN] = 0; // Set minimum bytes for reading to 0. Means, we read every produced input
+    raw.c_cc[VTIME] = 1; // Set wait time for read() to 100 miliseconds
 
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) die("tcsetattr: Error with writing setting for raw mode");
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) // Apply new setting to terminal state
+        die("tcsetattr: Error with writing setting for raw mode");
 }
 
 
