@@ -13,10 +13,22 @@ enum editorKey {
     PAGE_UP,
     PAGE_DOWN,
 };
+
+/**
+ * All escape sequances starts with this escape code
+ */
+#define ESCAPE_CODE '\x1b'
+
 #define CTRL_KEY(k) ((k) & 0x1f)
-// 4 byte size
+/**
+ * Erase all text on display (means just visual output, no data affected)
+ * Size: 4 byte
+ */
 #define C_ERASE_DISPLAY "\x1b[2J"
-// 3 byte size
+/**
+ * Set cursor position to start
+ * Size: 3 byte
+ */
 #define C_START_CURSOR_POS "\x1b[H"
 
 // Erase screen and show error

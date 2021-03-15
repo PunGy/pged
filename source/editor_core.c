@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "editor_core.h"
 #include "pged.h"
@@ -71,47 +72,52 @@ int editorReadKey(void)
         if (nread == -1 && errno != EAGAIN) die("read: Error in reading key from STDIN");
     }
 
-    if (c == '\x1b') {
+    if (c == ESCAPE_CODE) {
         char seq[3]; // array for sequance keys
 
-        if (read(STDIN_FILENO, &seq[0], 1) != 1) return '\x1b';
-        if (read(STDIN_FILENO, &seq[1], 1) != 1) return '\x1b';
+        if (read(STDIN_FILENO, &seq[0], 1) != 1) return ESCAPE_CODE; // read first byte of seq
+        if (read(STDIN_FILENO, &seq[1], 1) != 1) return ESCAPE_CODE; // read second byte of seq
 
         // in different systems sequances of HOME and END can be different
 
-        if (seq[0] == '[') {
-            
-            if (seq[1] >= '0' && seq[1] <= '9') {
-                if (read(STDIN_FILENO, &seq[2], 1) != 1) return '\x1b';
+        if (seq[0] == '[') { // '[' after escape code means it's an escape sequance
+            // sequnce here is kind of \x1b[ 
+
+            if (isdigit(seq[1])) {
+                // sequance here is kind of \x1b[(number)
+
+                if (read(STDIN_FILENO, &seq[2], 1) != 1) return ESCAPE_CODE; // read third byte of seq
+
                 if (seq[2] == '~') {
+                    // sequance here is kind of \x1b[(number)~
                     switch (seq[1]) {
-                        case '1': return HOME_KEY;
-                        case '3': return DEL_KEY;
-                        case '4': return END_KEY;
-                        case '5': return PAGE_UP; // PgUp key is "\x1b[5~"
-                        case '6': return PAGE_DOWN; // PgUp key is "\x1b[6~"
-                        case '7': return HOME_KEY;
-                        case '8': return END_KEY;
+                        case '1': return HOME_KEY;  // \x1b[1~
+                        case '3': return DEL_KEY;   // \x1b[3~
+                        case '4': return END_KEY;   // \x1b[4~
+                        case '5': return PAGE_UP;   // \x1b[5~
+                        case '6': return PAGE_DOWN; // \x1b[6~
+                        case '7': return HOME_KEY;  // \x1b[7~
+                        case '8': return END_KEY;   // \x1b[8~
                     }
                 }
             }
 
             switch (seq[1]) {
-                case 'A': return ARROW_UP;
-                case 'B': return ARROW_DOWN;
-                case 'C': return ARROW_RIGHT;
-                case 'D': return ARROW_LEFT;
-                case 'H': return HOME_KEY;
-                case 'F': return END_KEY;
+                case 'A': return ARROW_UP;    // \x1b[A~
+                case 'B': return ARROW_DOWN;  // \x1b[B~
+                case 'C': return ARROW_RIGHT; // \x1b[C~
+                case 'D': return ARROW_LEFT;  // \x1b[D~
+                case 'H': return HOME_KEY;    // \x1b[H~
+                case 'F': return END_KEY;     // \x1b[F~
             }
-        } else if (seq[0] == 'O') {
+        } else if (seq[0] == 'O') { // In some system is also can be O
             switch (seq[1])
             {
-                case 'H': return HOME_KEY;
-                case 'F': return END_KEY;
+                case 'H': return HOME_KEY; // \x1bOH
+                case 'F': return END_KEY;  // \x1bOF
             }
         }
-        return '\x1b';
+        return ESCAPE_CODE;
     }
 
     return c;
@@ -124,7 +130,7 @@ int getCursorPosition(int *rows, int *cols)
 
     unsigned int i = 0;
 
-    // ask shell cursor position, it will be printed to stdout
+    // ask shell for cursor position, it will be printed to stdout
     if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) return -1;
 
     while (i < sizeof(curpos) - 1) {
