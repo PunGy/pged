@@ -2,12 +2,13 @@
 #define _GNU_SOURCE
 #define _BSD_SOURCE
 
-#include <termio.h>
+#include <termios.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <ctype.h>
+#include <sys/ioctl.h>
 
 #include "editor_core.h"
 #include "pged.h"
